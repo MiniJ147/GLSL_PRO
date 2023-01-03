@@ -1,5 +1,4 @@
 import gfx.Display;
-import gfx.FontLoader;
 import gfx.RenderFunctions;
 import input.KeyManager;
 import input.MouseManager;
@@ -26,20 +25,19 @@ enum backGroundColor{
 
 public class Editor implements ActionListener {
     //random
-    private final String version = "Version[0.05]";
+    private final String version = "Version[0.051]";
     //UI Stuff
-    private JMenuItem loadFile, saveFile;
-    private JMenuItem incFontSize, decFontSize, loadFont;
-    private JMenuItem setBackgroundColorBlack,
+    private final JMenuItem loadFile, saveFile;
+    private final JMenuItem setBackgroundColorBlack,
                       setBackgroundColorGrey,
                       setBackgroundColorWhite,
                       setBackgroundColorLight;
-    private Font font;
-    private int fontSize = 24;
-    private String fontPath = "";
+    private final int fontSize = 24;
+    private Font font = new Font("Monospaced",Font.PLAIN,fontSize);
+
 
     //file stuff
-    private File selectedFile;
+    private  File selectedFile;
     private String sourceLine = "";
 
     private boolean running = false;
@@ -66,8 +64,6 @@ public class Editor implements ActionListener {
     private int currentCharIndex = currentCharSelected-1;
     private StringBuilder currentLine;
 
-    private String test = "";
-
     public Editor(){
         display = new Display(width,height,"GLSL PRO  "+version);
 
@@ -85,19 +81,6 @@ public class Editor implements ActionListener {
         fileMenu.add(loadFile);
         fileMenu.add(saveFile);
         menuBar.add(fileMenu);
-
-        //font settings
-        JMenu  fontMenu = new JMenu("Font");
-        incFontSize = new JMenuItem("Increase Font Size");
-        decFontSize = new JMenuItem("Decrease Font Size");
-        loadFont = new JMenuItem("Load Font");
-        incFontSize.addActionListener(this);
-        decFontSize.addActionListener(this);
-        loadFont.addActionListener(this);
-        fontMenu.add(incFontSize);
-        fontMenu.add(decFontSize);
-        fontMenu.add(loadFont);
-        menuBar.add(fontMenu);
 
         //adding theme
         JMenu themeMenu = new JMenu("Theme");
@@ -167,12 +150,23 @@ public class Editor implements ActionListener {
                         case 8://backspace
                            if(currentLine.isEmpty() || currentCharSelected == 0){
                                println("Line is Empty");
+                               if(!lines.get(lineIndex).isEmpty() && lineIndex-1>=0){
+                                   println("We should move this up now!!!");
+
+                                   String line = lines.get(lineIndex-1);
+                                   String newLine = line.substring(0,line.length()-1) + currentLine.toString();
+
+                                   currentCharSelected = line.length()-1;
+
+                                   lines.set(lineIndex-1,newLine);
+                                   lines.remove(lineIndex);
+
+                                   lineIndex-=1;
+                               }
                                break;
                            }
 
-                            /*currentLine.delete(currentCharSelected,currentLine.length()+currentCharSelected-1);
-                            currentCharSelected--;
-                            println("Cur:"+currentCharSelected); */
+                           println("Removed line");
                             currentLine.deleteCharAt(currentCharSelected-1);
                             currentCharSelected-=1;
                             println("Cur:"+currentCharSelected+"| "+currentCharIndex+"|"+currentLine.length());
@@ -182,15 +176,8 @@ public class Editor implements ActionListener {
                             break;
                         case 10: //enter key
                             lineIndex+=1;
-                            if(lineIndex>=lines.size()) {
-                                lines.add(lineIndex, "\n");
-                                currentCharSelected=0;
-                            } else{
-                                if(currentCharSelected>lines.get(lineIndex).length())
-                                    currentCharSelected = lines.get(lineIndex).length();
-                            }
-
-                            println("Cur:"+currentCharSelected);
+                            lines.add(lineIndex, "\n");
+                            currentCharSelected=0;
                             break;
                         case 37: //left key
                             if(currentCharSelected<=0){
@@ -257,10 +244,11 @@ public class Editor implements ActionListener {
                                 a = '\'';
 
                             if(keyManager.isCap() || shiftHeld)
-                                currentLine.insert(currentCharSelected,Character.toUpperCase(a));
+                                a = Character.toUpperCase(a);
                            else
-                                currentLine.insert(currentCharSelected,Character.toLowerCase(a));
+                                a = Character.toLowerCase(a);
 
+                            currentLine.insert(currentCharSelected,a);
                             currentCharSelected++;
                             currentCharIndex = currentCharSelected-1;
                             println("Cur:"+currentCharSelected+"| "+currentCharIndex+"|"+currentLine.length());
@@ -303,14 +291,13 @@ public class Editor implements ActionListener {
         g = bs.getDrawGraphics();
         g.setColor(themeColor);
         g.fillRect(0,0,width,height);
-        //draw
-        if(font!=null)
-            g.setFont(font);
-        else
-            g.setFont(new Font("Arial",Font.PLAIN,fontSize));
 
-        g.setColor(Color.white);
-        g.fillRect((currentLine.length()-1)*(fontSize/2)+12,10+lineIndex*fontSize,fontSize/4,fontSize+10);
+        //draw
+        g.setColor(Color.white);;
+
+        int y_offset = ((33 * lineIndex)+22)-(mouseManager.getMouse_scroll_offset()* mouseManager.getMouse_scroll_speed());
+
+        g.fillRect((currentCharSelected) * (fontSize-10) + 10,y_offset,fontSize/8,18);
 
         g.setColor(fontColor);
 
@@ -320,7 +307,8 @@ public class Editor implements ActionListener {
             sourceLine += s;
         }
 
-        RenderFunctions.drawString(g,sourceLine,12,10-(mouseManager.getMouse_scroll_offset()* mouseManager.getMouse_scroll_speed()));
+        g.setFont(font);
+        RenderFunctions.drawString(g,sourceLine,12,-1*(mouseManager.getMouse_scroll_offset()* mouseManager.getMouse_scroll_speed()));
 
         //stop
         bs.show();
@@ -377,36 +365,5 @@ public class Editor implements ActionListener {
 
         if(e.getSource()==setBackgroundColorLight)
             chosenTheme = backGroundColor.LIGHT;
-
-        if(e.getSource()==decFontSize){
-            fontSize-=4;
-
-            if(fontPath=="")
-                return;
-            font = FontLoader.loadFont(fontPath,fontSize);
-        }
-        if(e.getSource()==incFontSize){
-            fontSize+=4;
-
-            if(fontPath=="")
-                return;
-            font = FontLoader.loadFont(fontPath,fontSize);
-        }
-
-        if(e.getSource()==loadFont){
-            JFileChooser fileChooser = new JFileChooser();
-
-            //[TODO] When shipping change this back
-            fileChooser.setCurrentDirectory(new File("C:\\Users\\Jake Paul\\Desktop"));
-
-            int response = fileChooser.showOpenDialog(null); // select file to open
-
-            if(response==JFileChooser.APPROVE_OPTION) {
-                File file = new File(fileChooser.getSelectedFile().getAbsolutePath());
-                fontPath = file.getAbsolutePath();
-                println(file.getAbsolutePath());
-                font = FontLoader.loadFont(file.getAbsolutePath(),fontSize);
-            }
-        }
     }
 }
