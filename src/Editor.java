@@ -297,7 +297,7 @@ public class Editor implements ActionListener {
 
         int y_offset = ((33 * lineIndex)+22)-(mouseManager.getMouse_scroll_offset()* mouseManager.getMouse_scroll_speed());
 
-        g.fillRect((currentCharSelected) * (fontSize-10) + 10,y_offset,fontSize/8,18);
+        g.fillRect((currentCharSelected) * (fontSize-10) + 48,y_offset,fontSize/8,18);
 
         g.setColor(fontColor);
 
@@ -308,7 +308,7 @@ public class Editor implements ActionListener {
         }
 
         g.setFont(font);
-        RenderFunctions.drawString(g,sourceLine,12,-1*(mouseManager.getMouse_scroll_offset()* mouseManager.getMouse_scroll_speed()));
+        RenderFunctions.drawString(g,sourceLine,48,-1*(mouseManager.getMouse_scroll_offset()* mouseManager.getMouse_scroll_speed()));
 
         //stop
         bs.show();
