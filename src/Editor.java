@@ -25,7 +25,7 @@ enum backGroundColor{
 
 public class Editor implements ActionListener {
     //random
-    private final String version = "Version[0.051]";
+    private final String version = "Version[0.06]";
     //UI Stuff
     private final JMenuItem loadFile, saveFile;
     private final JMenuItem setBackgroundColorBlack,
@@ -175,8 +175,13 @@ public class Editor implements ActionListener {
                             correctEditToLine();
                             break;
                         case 10: //enter key
+                            String str = currentLine.substring(currentCharSelected,currentLine.length());
+                            currentLine.delete(currentCharSelected,currentLine.length());
+                            currentLine.append('\n');
+                            correctEditToLine();
+
                             lineIndex+=1;
-                            lines.add(lineIndex, "\n");
+                            lines.add(lineIndex, str);
                             currentCharSelected=0;
                             break;
                         case 37: //left key
@@ -193,7 +198,6 @@ public class Editor implements ActionListener {
                                 println("No line there");
                                 break;
                             }
-
                             lineIndex+=1;
                             currentLine = new StringBuilder(lines.get(lineIndex));
                             println(""+currentLine);
@@ -248,12 +252,31 @@ public class Editor implements ActionListener {
                            else
                                 a = Character.toLowerCase(a);
 
-                            currentLine.insert(currentCharSelected,a);
-                            currentCharSelected++;
-                            currentCharIndex = currentCharSelected-1;
-                            println("Cur:"+currentCharSelected+"| "+currentCharIndex+"|"+currentLine.length());
-                            correctEditToLine();
+                           switch(a){
+                               case '(':
+                                   currentLine.insert(currentCharSelected,a);
+                                   currentCharSelected++;
+                                   currentCharIndex = currentCharSelected-1;
 
+                                   currentLine.insert(currentCharSelected,')');
+                                   break;
+                               case '{':
+                                   currentLine.insert(currentCharSelected,a);
+                                   currentCharSelected++;
+                                   currentCharIndex = currentCharSelected-1;
+
+                                   currentLine.insert(currentCharSelected,'}');
+                                   break;
+                               default:
+
+                                   currentLine.insert(currentCharSelected,a);
+                                   currentCharSelected++;
+                                   currentCharIndex = currentCharSelected-1;
+                                   println("Cur:"+currentCharSelected+"| "+currentCharIndex+"|"+currentLine.length());
+                                   break;
+                           }
+
+                            correctEditToLine();
                             break;
                     }
                 }
@@ -339,7 +362,6 @@ public class Editor implements ActionListener {
                     Scanner myReader = new Scanner(selectedFile);
                     while (myReader.hasNextLine()) {
                         lines.add(myReader.nextLine()+'\n');
-                        //sourceLine =sourceLine + myReader.nextLine() + '\n';
                     }
 
                     println(sourceLine);
@@ -352,6 +374,7 @@ public class Editor implements ActionListener {
         }
         if(e.getSource()==saveFile){
             println("Saved to File!");
+            println(""+sourceLine);
         }
 
         if(e.getSource()==setBackgroundColorBlack)
