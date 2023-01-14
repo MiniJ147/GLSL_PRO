@@ -16,7 +16,7 @@ import java.util.Scanner;
 
 import static utils.Utils.println;
 
-enum backGroundColor{
+enum background_color{
     BLACK,
     GREY,
     WHITE,
@@ -24,96 +24,95 @@ enum backGroundColor{
 }
 
 public class Editor implements ActionListener {
-    //random
-    private final String version = "Version[0.06]";
     //UI Stuff
-    private final JMenuItem loadFile, saveFile;
-    private final JMenuItem setBackgroundColorBlack,
-                      setBackgroundColorGrey,
-                      setBackgroundColorWhite,
-                      setBackgroundColorLight;
-    private final int fontSize = 24;
-    private Font font = new Font("Monospaced",Font.PLAIN,fontSize);
+    private final JMenuItem menu_load_file, menu_save_file;
+    private final JMenuItem menu_set_background_color_black,
+                      menu_set_background_color_grey,
+                      menu_set_background_color_white,
+                      menu_set_background_color_light;
+    private final int font_size = 24;
+    private final Font font = new Font("Monospaced",Font.PLAIN,font_size);
 
 
     //file stuff
-    private  File selectedFile;
-    private String sourceLine = "";
+    private  File file_selected;
+    private String source_line = "";
 
     private boolean running = false;
 
     //import classes
     private Display display;
-    private MouseManager mouseManager;
-    private KeyManager keyManager;
+    private MouseManager mouse_manager;
+    private KeyManager key_manager;
 
     //background color
-    private backGroundColor chosenTheme = backGroundColor.BLACK;
-    private Color themeColor,fontColor;
+    private background_color theme_chosen = background_color.BLACK;
+    private Color theme_color,font_color;
 
     //gfx stuff
-    private BufferStrategy bs;
-    private Graphics g;
-    private int width = 800;
-    private int height = 800;
+    private BufferStrategy gfx_bs;
+    private Graphics gfx_g;
+    private int window_width = 800;
+    private int window_height = 800;
 
     //string and line building [THE MEAT]
     private LinkedList<String> lines;
-    private int lineIndex = 0;
-    private int currentCharSelected = 0;
-    private int currentCharIndex = currentCharSelected-1;
-    private StringBuilder currentLine;
+    private int lines_index = 0;
+    private int lines_current_char_selected = 0;
+    private StringBuilder lines_current;
 
     public Editor(){
-        display = new Display(width,height,"GLSL PRO  "+version);
+        //random
+        String version = "Version[0.61]";
+        display = new Display(window_width,window_height,"GLSL PRO  "+ version);
 
         display.getFrame().setLayout(new FlowLayout());
 
         //creating our menu bar stuff
-        JMenuBar menuBar = new JMenuBar();
+        JMenuBar menu_bar = new JMenuBar();
 
         //adding file settings
         JMenu fileMenu = new JMenu("File");
-        loadFile = new JMenuItem("Load");
-        saveFile = new JMenuItem("Save");
-        loadFile.addActionListener(this);
-        saveFile.addActionListener(this);
-        fileMenu.add(loadFile);
-        fileMenu.add(saveFile);
-        menuBar.add(fileMenu);
+        menu_load_file = new JMenuItem("Load");
+        menu_save_file = new JMenuItem("Save");
+        menu_load_file.addActionListener(this);
+        menu_save_file.addActionListener(this);
+        fileMenu.add(menu_load_file);
+        fileMenu.add(menu_save_file);
+        menu_bar.add(fileMenu);
 
         //adding theme
         JMenu themeMenu = new JMenu("Theme");
-        setBackgroundColorBlack = new JMenuItem("Background Black");
-        setBackgroundColorWhite = new JMenuItem("Background White");
-        setBackgroundColorGrey = new JMenuItem("Background Grey");
-        setBackgroundColorLight = new JMenuItem("Background Light");
+        menu_set_background_color_black = new JMenuItem("Background Black");
+        menu_set_background_color_white = new JMenuItem("Background White");
+        menu_set_background_color_grey = new JMenuItem("Background Grey");
+        menu_set_background_color_light = new JMenuItem("Background Light");
 
-        setBackgroundColorLight.addActionListener(this);
-        setBackgroundColorGrey.addActionListener(this);
-        setBackgroundColorBlack.addActionListener(this);
-        setBackgroundColorWhite.addActionListener(this);
+        menu_set_background_color_light.addActionListener(this);
+        menu_set_background_color_grey.addActionListener(this);
+        menu_set_background_color_black.addActionListener(this);
+        menu_set_background_color_white.addActionListener(this);
 
-        themeMenu.add(setBackgroundColorLight);
-        themeMenu.add(setBackgroundColorGrey);
-        themeMenu.add(setBackgroundColorWhite);
-        themeMenu.add(setBackgroundColorBlack);
-        menuBar.add(themeMenu);
+        themeMenu.add(menu_set_background_color_light);
+        themeMenu.add(menu_set_background_color_grey);
+        themeMenu.add(menu_set_background_color_white);
+        themeMenu.add(menu_set_background_color_black);
+        menu_bar.add(themeMenu);
 
-        mouseManager = new MouseManager();
-        display.getCanvas().addMouseWheelListener(mouseManager);
-        display.getFrame().addMouseWheelListener(mouseManager);
+        mouse_manager = new MouseManager();
+        display.getCanvas().addMouseWheelListener(mouse_manager);
+        display.getFrame().addMouseWheelListener(mouse_manager);
 
-        keyManager = new KeyManager();
-        display.getFrame().addKeyListener(keyManager);
-        display.getCanvas().addKeyListener(keyManager);
+        key_manager = new KeyManager();
+        display.getFrame().addKeyListener(key_manager);
+        display.getCanvas().addKeyListener(key_manager);
 
-        display.getFrame().setJMenuBar(menuBar);
+        display.getFrame().setJMenuBar(menu_bar);
         display.getFrame().setVisible(true);
 
         lines = new LinkedList<>();
         lines.add("\n");
-        currentLine = new StringBuilder(lines.get(lineIndex));
+        lines_current = new StringBuilder(lines.get(lines_index));
 
         running = true;
     }
@@ -121,250 +120,259 @@ public class Editor implements ActionListener {
     public void run(){
 
         while(running){
-            //checking resize
-            if(width!=display.getFrame().getWidth() || height!=display.getFrame().getHeight()) {
-                width = display.getFrame().getWidth();
-                height = display.getFrame().getHeight();
+            //checking resize=====///
+            if(window_width!=display.getFrame().getWidth() || window_height!=display.getFrame().getHeight()) {
+                window_width = display.getFrame().getWidth();
+                window_height = display.getFrame().getHeight();
 
-                display.getCanvas().setSize(new Dimension(width,height));
+                display.getCanvas().setSize(new Dimension(window_width,window_height));
 
                 println(""+display.getCanvas().getWidth());
             }
             //====================//
-            if(keyManager.isReadyToAdd()){
-                currentLine = new StringBuilder(lines.get(lineIndex));
-                int keyCode = keyManager.getCurrentKeyPressed();
 
-                Utils.print(""+keyCode+",");
+            //if we are ready to add a new char run this code
+            if(key_manager.isKey_ready_to_add()){
+                lines_current = new StringBuilder(lines.get(lines_index));
+                int key_code = key_manager.getKey_current_pressed();
 
-                boolean type = true;
-                for(int _blackedKey : keyManager.getBlackListedKeys()){
-                    if(keyCode==_blackedKey){
-                        type=false;
+                Utils.print(""+key_code+",");
+
+                boolean type_to_string = true;
+                //checking ot see if we pressed a blacklisted key
+                for(int _blackedKey : key_manager.getKey_blacklist()){
+                    if (key_code == _blackedKey) {
+                        type_to_string = false;
+                        break;
                     }
                 }
-                if(type){
-                    boolean shiftHeld = keyManager.isShift_held();
 
-                    switch(keyCode){
+                if(type_to_string){
+                    boolean shift_held = key_manager.isShift_held();
+
+                    switch(key_code){
+                        //checking special keys
                         case 8://backspace
-                           if(currentLine.isEmpty() || currentCharSelected == 0){
-                               println("Line is Empty");
-                               if(!lines.get(lineIndex).isEmpty() && lineIndex-1>=0){
-                                   println("We should move this up now!!!");
+                           if(lines_current.isEmpty() || lines_current_char_selected == 0){
+                               if(!lines.get(lines_index).isEmpty() && lines_index-1>=0){
+                                   String line = lines.get(lines_index-1);
+                                   String line_new = line.substring(0,line.length()-1) + lines_current.toString();
 
-                                   String line = lines.get(lineIndex-1);
-                                   String newLine = line.substring(0,line.length()-1) + currentLine.toString();
+                                   lines_current_char_selected = line.length()-1;
 
-                                   currentCharSelected = line.length()-1;
+                                   lines.set(lines_index-1,line_new);
+                                   lines.remove(lines_index);
 
-                                   lines.set(lineIndex-1,newLine);
-                                   lines.remove(lineIndex);
 
-                                   lineIndex-=1;
+
+                                   lines_index-=1;
                                }
                                break;
                            }
 
-                           println("Removed line");
-                            currentLine.deleteCharAt(currentCharSelected-1);
-                            currentCharSelected-=1;
-                            println("Cur:"+currentCharSelected+"| "+currentCharIndex+"|"+currentLine.length());
-                           keyManager.setReadyToAdd(false);
+                           lines_current.deleteCharAt(lines_current_char_selected-1);
+                           lines_current_char_selected-=1;
+                           key_manager.setKey_ready_to_add(false);
 
-                            correctEditToLine();
+                            line_correct_edit();
                             break;
                         case 10: //enter key
-                            String str = currentLine.substring(currentCharSelected,currentLine.length());
-                            currentLine.delete(currentCharSelected,currentLine.length());
-                            currentLine.append('\n');
-                            correctEditToLine();
+                            String str = lines_current.substring(lines_current_char_selected,lines_current.length());
+                            lines_current.delete(lines_current_char_selected,lines_current.length());
+                            lines_current.append('\n');
 
-                            lineIndex+=1;
-                            lines.add(lineIndex, str);
-                            currentCharSelected=0;
+                            line_correct_edit();
+
+                            lines_index+=1;
+                            lines.add(lines_index, str);
+                            lines_current_char_selected=0;
                             break;
                         case 37: //left key
-                            if(currentCharSelected<=0){
-                                println("at the end of line");
+                            if(lines_current_char_selected<=0)
                                 break;
-                            }
 
-                            currentCharSelected--;
-                            currentCharIndex = currentCharSelected-1;
+                            lines_current_char_selected--;
                             break;
                         case 40: //down key
-                            if(lines.size()<=lineIndex+1){
-                                println("No line there");
+                            if(lines.size()<=lines_index+1)
                                 break;
-                            }
-                            lineIndex+=1;
-                            currentLine = new StringBuilder(lines.get(lineIndex));
-                            println(""+currentLine);
-                            currentCharSelected = currentLine.length()-1;
 
-                            println("Cur:"+currentCharSelected);
-                            println(""+currentLine.toString()+" "+currentLine.length());
+                            lines_index+=1;
+                            lines_current = new StringBuilder(lines.get(lines_index));
+                            lines_current_char_selected = lines_current.length()-1;
                             break;
                         case 39: //right key
-                            if(currentCharSelected+1>=currentLine.length()){
-                                println("at the end right of line");
+                            if(lines_current_char_selected+1>=lines_current.length())
                                 break;
-                            }
 
-                            currentCharSelected++;
-                            currentCharIndex = currentCharSelected+1;
+                            lines_current_char_selected++;
                             break;
                         case 38: //up key
-                            if(lineIndex<=0)
+                            if(lines_index<=0)
                                 break;
 
-                            lineIndex-=1;
-                            currentLine = new StringBuilder(lines.get(lineIndex));
-                            currentCharSelected = currentLine.length()-1;
+                            lines_index-=1;
+                            lines_current = new StringBuilder(lines.get(lines_index));
+                            lines_current_char_selected = lines_current.length()-1;
 
-                            correctEditToLine();
-
-                            println("Cur:"+currentCharSelected);
-                            println(""+currentLine.toString()+" "+currentLine.length());
+                            line_correct_edit();
                             break;
-                        default:
-                            char a = (char)keyCode;
+                        default: //now after all the special keys are out of the way we can add the char to the string
+                            char a = (char)key_code;
 
-                            if(shiftHeld) {
-                                int[] specialShiftKeysCodes = {49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 45, 61,
+                            //checking the special cases when shift is being held
+                            if(shift_held) {
+                                int[] shift_special_key_codes = {49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 45, 61,
                                                                91,93,59,222,92,44,46,47};
-                                String specialShiftKeys = "!@#$%^&*()_+{}:\"\\<>?";
+                                String shift_special_chars = "!@#$%^&*()_+{}:\"\\<>?";
 
-                                for(int i=0; i<specialShiftKeysCodes.length;i++){
-                                    if(keyCode==specialShiftKeysCodes[i]){
-                                        a = specialShiftKeys.charAt(i);
+                                //checking if our key code matches are special shift key codes
+                                for(int i=0; i<shift_special_key_codes.length;i++){
+                                    if(key_code==shift_special_key_codes[i]){
+                                        a = shift_special_chars.charAt(i);
                                         break;
                                     }
                                 }
                             }
 
-                            if(keyCode==222)
+                            if(key_code==222)
                                 a = '\'';
 
-                            if(keyManager.isCap() || shiftHeld)
+                            //checking if we should capitalize it
+                            if(key_manager.isKey_cap() || shift_held)
                                 a = Character.toUpperCase(a);
                            else
                                 a = Character.toLowerCase(a);
 
+                           //checking special cases with chars
                            switch(a){
-                               case '(':
-                                   currentLine.insert(currentCharSelected,a);
-                                   currentCharSelected++;
-                                   currentCharIndex = currentCharSelected-1;
+                               case '(': // add on to the right
+                                   lines_current.insert(lines_current_char_selected,a);
+                                   lines_current_char_selected++;
 
-                                   currentLine.insert(currentCharSelected,')');
+                                   lines_current.insert(lines_current_char_selected,')');
                                    break;
                                case '{':
-                                   currentLine.insert(currentCharSelected,a);
-                                   currentCharSelected++;
-                                   currentCharIndex = currentCharSelected-1;
+                                   lines_current.insert(lines_current_char_selected,a);
+                                   lines_current_char_selected++;
 
-                                   currentLine.insert(currentCharSelected,'}');
+                                   lines_current.insert(lines_current_char_selected,'}');
                                    break;
-                               default:
-
-                                   currentLine.insert(currentCharSelected,a);
-                                   currentCharSelected++;
-                                   currentCharIndex = currentCharSelected-1;
-                                   println("Cur:"+currentCharSelected+"| "+currentCharIndex+"|"+currentLine.length());
+                               case ')':
+                                   line_check_char_right(')');
+                                   break;
+                               case '}':
+                                   line_check_char_right('}');
+                                   break;
+                               default: //if we don't see any of these special cases then we can just add our char
+                                   lines_current.insert(lines_current_char_selected,a);
+                                   lines_current_char_selected++;
                                    break;
                            }
 
-                            correctEditToLine();
+                            line_correct_edit();
                             break;
                     }
                 }
-                keyManager.setReadyToAdd(false);
+                key_manager.setKey_ready_to_add(false);
             }
             render();
         }
     }
 
     private void render() {
-        switch(chosenTheme){
+        //adjusting the colors to the theme we have selected
+        switch(theme_chosen){
             case BLACK:
-                themeColor = new Color(38,38,38);
-                fontColor = new Color(236,236,236);
+                theme_color = new Color(38,38,38);
+                font_color = new Color(236,236,236);
                 break;
             case GREY:
-                themeColor = new Color(76, 75, 75);
-                fontColor = new Color(135, 207, 255);
+                theme_color = new Color(76, 75, 75);
+                font_color = new Color(135, 207, 255);
                 break;
             case WHITE:
-                themeColor = new Color(255, 255, 255);
-                fontColor = new Color(0, 0, 0);
+                theme_color = new Color(255, 255, 255);
+                font_color = new Color(0, 0, 0);
                 break;
             case LIGHT:
-                themeColor = new Color(208, 207, 207);
-                fontColor = new Color(0, 0, 0);
+                theme_color = new Color(208, 207, 207);
+                font_color = new Color(0, 0, 0);
                 break;
         }
-        bs = display.getCanvas().getBufferStrategy();
+        gfx_bs = display.getCanvas().getBufferStrategy();
 
-        if(bs==null){
+        if(gfx_bs==null){
             display.getCanvas().createBufferStrategy(3);
             return;
         }
-        g = bs.getDrawGraphics();
-        g.setColor(themeColor);
-        g.fillRect(0,0,width,height);
+        gfx_g = gfx_bs.getDrawGraphics();
+        gfx_g.setColor(theme_color);
+        gfx_g.fillRect(0,0,window_width,window_height);
 
         //draw
-        g.setColor(Color.white);;
+        gfx_g.setColor(Color.white);;
 
-        int y_offset = ((33 * lineIndex)+22)-(mouseManager.getMouse_scroll_offset()* mouseManager.getMouse_scroll_speed());
+        int y_offset = ((33 * lines_index)+22)-(mouse_manager.getMouse_scroll_offset()* mouse_manager.getMouse_scroll_speed());
 
-        g.fillRect((currentCharSelected) * (fontSize-10) + 48,y_offset,fontSize/8,18);
+        gfx_g.fillRect((lines_current_char_selected) * (font_size-10) + 64,y_offset,font_size/8,18);
 
-        g.setColor(fontColor);
+        gfx_g.setColor(font_color);
 
-        sourceLine = "";
+        source_line = "";
 
         for(String s : lines){
-            sourceLine += s;
+            source_line += s;
         }
 
-        g.setFont(font);
-        RenderFunctions.drawString(g,sourceLine,48,-1*(mouseManager.getMouse_scroll_offset()* mouseManager.getMouse_scroll_speed()));
+        gfx_g.setFont(font);
+        RenderFunctions.drawString(gfx_g,source_line,64,-1*(mouse_manager.getMouse_scroll_offset()* mouse_manager.getMouse_scroll_speed()));
 
         //stop
-        bs.show();
-        g.dispose();
+        gfx_bs.show();
+        gfx_g.dispose();
     }
 
-    private void correctEditToLine(){
-        lines.remove(lineIndex);
-        lines.add(lineIndex, currentLine.toString());
+    //if we are either at the end of the line or the char to the right of us is not (a) then add (a) to the right
+    private void line_check_char_right(char a){
+        if(lines_current.length()-1==lines_current_char_selected ||
+                lines_current.length()-1>lines_current_char_selected && lines_current.charAt(lines_current_char_selected)!=a){
+
+            lines_current.insert(lines_current_char_selected,a);
+            lines_current_char_selected++;
+            return;
+        }
+        lines_current_char_selected++;
+    }
+
+    //replaces current line in our list
+    private void line_correct_edit(){
+        lines.remove(lines_index);
+        lines.add(lines_index, lines_current.toString());
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if(e.getSource()==loadFile){
+        if(e.getSource()==menu_load_file){
             println("Loaded From File!");
-            JFileChooser fileChooser = new JFileChooser();
+            JFileChooser file_chooser = new JFileChooser();
 
             //[TODO] When shipping change this back
-            fileChooser.setCurrentDirectory(new File("C:\\Users\\Jake Paul\\Desktop"));
+            file_chooser.setCurrentDirectory(new File("C:\\Users\\Jake Paul\\Desktop"));
 
-            int response = fileChooser.showOpenDialog(null); // select file to open
+            int response = file_chooser.showOpenDialog(null); // select file to open
 
             if(response==JFileChooser.APPROVE_OPTION){
-                selectedFile = new File(fileChooser.getSelectedFile().getAbsolutePath());
-                println(selectedFile.getAbsolutePath());
+                file_selected = new File(file_chooser.getSelectedFile().getAbsolutePath());
+                println(file_selected.getAbsolutePath());
 
                 try {
-                    Scanner myReader = new Scanner(selectedFile);
+                    Scanner myReader = new Scanner(file_selected);
                     while (myReader.hasNextLine()) {
                         lines.add(myReader.nextLine()+'\n');
                     }
 
-                    println(sourceLine);
+                    println(source_line);
                     myReader.close();
                 } catch (FileNotFoundException j) {
                     System.out.println("An error occurred.");
@@ -372,21 +380,21 @@ public class Editor implements ActionListener {
                 }
             }
         }
-        if(e.getSource()==saveFile){
+        if(e.getSource()==menu_save_file){
             println("Saved to File!");
-            println(""+sourceLine);
+            println(""+source_line);
         }
 
-        if(e.getSource()==setBackgroundColorBlack)
-            chosenTheme = backGroundColor.BLACK;
+        if(e.getSource()==menu_set_background_color_black)
+            theme_chosen = background_color.BLACK;
 
-        if(e.getSource()==setBackgroundColorWhite)
-            chosenTheme = backGroundColor.WHITE;
+        if(e.getSource()==menu_set_background_color_white)
+            theme_chosen = background_color.WHITE;
 
-        if(e.getSource()==setBackgroundColorGrey)
-            chosenTheme = backGroundColor.GREY;
+        if(e.getSource()==menu_set_background_color_grey)
+            theme_chosen = background_color.GREY;
 
-        if(e.getSource()==setBackgroundColorLight)
-            chosenTheme = backGroundColor.LIGHT;
+        if(e.getSource()==menu_set_background_color_light)
+            theme_chosen = background_color.LIGHT;
     }
 }

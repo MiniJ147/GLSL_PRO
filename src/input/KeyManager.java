@@ -4,12 +4,12 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 public class KeyManager implements KeyListener {
-    private int currentKeyPressed = -100;
-    private boolean readyToAdd = false;
-    private boolean cap = false;
+    private int key_current_pressed = -100;
+    private boolean key_ready_to_add = false;
+    private boolean key_cap = false;
     private boolean shift_held = false;
 
-    private final int[] blackListedKeys = {16,17,18,20};
+    private final int[] key_blacklist = {16,17,18,20};
 
     @Override
     public void keyTyped(KeyEvent e) {
@@ -18,12 +18,12 @@ public class KeyManager implements KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        readyToAdd = true;
-        currentKeyPressed = e.getKeyCode();
+        key_ready_to_add = true;
+        key_current_pressed = e.getKeyCode();
 
-        if(currentKeyPressed==KeyEvent.VK_CAPS_LOCK)
-            cap = !cap;
-        else if(currentKeyPressed==KeyEvent.VK_SHIFT)
+        if(key_current_pressed==KeyEvent.VK_CAPS_LOCK)
+            key_cap = !key_cap;
+        else if(key_current_pressed==KeyEvent.VK_SHIFT)
             shift_held = true;
     }
 
@@ -37,23 +37,23 @@ public class KeyManager implements KeyListener {
         return shift_held;
     }
 
-    public int getCurrentKeyPressed() {
-        return currentKeyPressed;
+    public int getKey_current_pressed() {
+        return key_current_pressed;
     }
 
-    public boolean isCap() {
-        return cap;
+    public boolean isKey_cap() {
+        return key_cap;
     }
 
-    public int[] getBlackListedKeys() {
-        return blackListedKeys;
+    public int[] getKey_blacklist() {
+        return key_blacklist;
     }
 
-    public boolean isReadyToAdd() {
-        return readyToAdd;
+    public boolean isKey_ready_to_add() {
+        return key_ready_to_add;
     }
 
-    public void setReadyToAdd(boolean readyToAdd) {
-        this.readyToAdd = readyToAdd;
+    public void setKey_ready_to_add(boolean readyToAdd) {
+        this.key_ready_to_add = readyToAdd;
     }
 }
